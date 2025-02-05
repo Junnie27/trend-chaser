@@ -1,9 +1,8 @@
 const API_KEY = 'AIzaSyB8n5z6QqIuj7-dl1z_EmHDBi2X0kWRpWw'; // Replace with your actual API key
 const SEARCH_BASE_URL = 'https://www.googleapis.com/youtube/v3/search';
 const CHANNELS_BASE_URL = 'https://www.googleapis.com/youtube/v3/channels';
+const PROXY_URL = 'https://corsproxy.io/?';
 const CATEGORIES_BASE_URL = 'https://www.googleapis.com/youtube/v3/videoCategories';
-
-const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
 
 // Global variable to store channel data
 let channelsData = [];
@@ -29,7 +28,6 @@ async function fetchCategories() {
     console.error("Network error:", error);
   }
 }
-
 // Run fetchCategories on page load
 document.addEventListener("DOMContentLoaded", fetchCategories);
 
