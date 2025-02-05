@@ -118,4 +118,3 @@ async function searchChannels() {
 
 // Expose the searchChannels function globally so it can be triggered from the HTML
 window.searchChannels = searchChannels;
-
