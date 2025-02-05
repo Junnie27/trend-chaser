@@ -3,13 +3,15 @@ const SEARCH_BASE_URL = 'https://www.googleapis.com/youtube/v3/search';
 const CHANNELS_BASE_URL = 'https://www.googleapis.com/youtube/v3/channels';
 const CATEGORIES_BASE_URL = 'https://www.googleapis.com/youtube/v3/videoCategories';
 
+const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
+
 // Global variable to store channel data
 let channelsData = [];
 
 // Fetch and populate video categories dynamically
 async function fetchCategories() {
   try {
-    const response = await fetch(`${CATEGORIES_BASE_URL}?part=snippet&regionCode=US&key=${API_KEY}`);
+    const response = await fetch(`${PROXY_URL}${CATEGORIES_BASE_URL}?part=snippet&regionCode=US&key=${API_KEY}`);
     const data = await response.json();
 
     if (response.ok && data.items) {
