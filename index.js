@@ -1,4 +1,4 @@
-const API_KEY = 'AIzaSyB8n5z6QqIuj7-dl1z_EmHDBi2X0kWRpWw'; // Replace with your actual API key
+﻿const API_KEY = 'AIzaSyB8n5z6QqIuj7-dl1z_EmHDBi2X0kWRpWw'; // Replace with your actual API key
 const SEARCH_BASE_URL = 'https://www.googleapis.com/youtube/v3/search';
 const CHANNELS_BASE_URL = 'https://www.googleapis.com/youtube/v3/channels';
 const CATEGORIES_BASE_URL = 'https://www.googleapis.com/youtube/v3/videoCategories';
@@ -219,6 +219,64 @@ function displayResults(channels) {
   table.appendChild(tbody);
   resultsContainer.appendChild(table);
 }
+// 🔹 ADD SORT FUNCTION BELOW THIS LINE
+
+function sortResults(field) {
+ if (!channelsData || channelsData.length === 0) return;
+
+ // Toggle sorting order
+    sortOrder[field] = sortOrder[field] === "asc" ? "desc" : "asc";
+
+    channelsData.sort((a, b) => {
+        let valueA, valueB;
+
+        switch (field) {
+            case "name":
+                valueA = a.snippet.title.toLowerCase();
+                valueB = b.snippet.title.toLowerCase();
+                return sortOrder[field] === "asc" ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+
+            case "subs":
+                valueA = parseInt(a.statistics.subscriberCount, 10) || 0;
+                valueB = parseInt(b.statistics.subscriberCount, 10) || 0;
+                break;
+
+            case "views":
+                valueA = parseInt(a.statistics.viewCount, 10) || 0;
+                valueB = parseInt(b.statistics.viewCount, 10) || 0;
+                break;
+
+            case "videos":
+                valueA = parseInt(a.statistics.videoCount, 10) || 0;
+                valueB = parseInt(b.statistics.videoCount, 10) || 0;
+                break;
+
+            case "launch":
+                valueA = new Date(a.snippet.publishedAt);
+                valueB = new Date(b.snippet.publishedAt);
+                return sortOrder[field] === "asc" ? valueA - valueB : valueB - valueA;
+
+            case "last12":
+                valueA = parseInt(a.videosLast12Months, 10) || 0;
+                valueB = parseInt(b.videosLast12Months, 10) || 0;
+                break;
+
+            case "memberships":
+                valueA = a.brandingSettings?.channel?.membershipsEnabled ? 1 : 0;
+                valueB = b.brandingSettings?.channel?.membershipsEnabled ? 1 : 0;
+                break;
+
+            default:
+                return 0;
+        }
+
+        return sortOrder[field] === "asc" ? valueA - valueB : valueB - valueA;
+    });
+
+    // Refresh the table after sorting
+    displayResults(channelsData);
+}
 
 // Expose the searchChannels function globally
+window.sortResults = sortResults;
 window.searchChannels = searchChannels;
