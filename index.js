@@ -252,13 +252,6 @@ function sortResults(field) {
   displayResults(channelsData);
 }
 
-    // Final sorting logic for numeric fields
-    return sortOrder[field] === "asc" ? valueA - valueB : valueB - valueA;
-  });
-
-  displayResults(channelsData);
-}
-
 
 // ✅ Function to display search results in a table
 function displayResults(channels) {
