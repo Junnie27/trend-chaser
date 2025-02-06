@@ -225,11 +225,11 @@ function displayResults(channels) {
         ${channels.map(channel => `
           <tr>
             <td>${channel.snippet.title}</td>
-            <td>${channel.statistics.subscriberCount}</td>
-            <td>${channel.statistics.viewCount}</td>
-            <td>${channel.statistics.videoCount}</td>
+            <td>${parseInt(channel.statistics.subscriberCount, 10).toLocaleString()}</td>
+            <td>${parseInt(channel.statistics.viewCount, 10).toLocaleString()}</td>
+            <td>${parseInt(channel.statistics.videoCount, 10).toLocaleString()}</td>
             <td>${new Date(channel.snippet.publishedAt).toLocaleDateString()}</td>
-            <td>${channel.videosLast12Months}</td>
+            <td>${Number(channel.videosLast12Months).toLocaleString()}</td>
             <td>${channel.brandingSettings?.channel?.membershipsEnabled ? "Yes" : "No"}</td>
           </tr>`).join('')}
       </tbody>
