@@ -1,4 +1,4 @@
-﻿const API_KEY = 'AIzaSyB8n5z6QqIuj7-dl1z_EmHDBi2X0kWRpWw'; // Replace with your actual API key
+﻿const API_KEY = 'AIzaSyCw0mJo6zqiwRorN9-4NUiyVsHTqgjP8tY'; // Replace with your actual API key
 const SEARCH_BASE_URL = 'https://www.googleapis.com/youtube/v3/search';
 const CHANNELS_BASE_URL = 'https://www.googleapis.com/youtube/v3/channels';
 const CATEGORIES_BASE_URL = 'https://www.googleapis.com/youtube/v3/videoCategories';
