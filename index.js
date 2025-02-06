@@ -196,8 +196,12 @@ function sortResults(field) {
   sortOrder[field] = sortOrder[field] === "asc" ? "desc" : "asc";
 
   channelsData.sort((a, b) => {
-    let valueA = parseInt(a[field].toString().replace(/,/g, ""), 10) || 0;
-    let valueB = parseInt(b[field].toString().replace(/,/g, ""), 10) || 0;
+    let valueA = a[field] || 0;
+    let valueB = b[field] || 0;
+
+    // Convert to numbers for proper sorting
+    if (typeof valueA === "string") valueA = parseInt(valueA.replace(/,/g, ""), 10) || 0;
+    if (typeof valueB === "string") valueB = parseInt(valueB.replace(/,/g, ""), 10) || 0;
 
     return sortOrder[field] === "asc" ? valueA - valueB : valueB - valueA;
   });
