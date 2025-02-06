@@ -41,88 +41,109 @@ async function fetchCategories() {
 document.addEventListener("DOMContentLoaded", fetchCategories);
 
 async function searchChannels() {
-  const query = document.getElementById('query').value.trim();
-  const countryFilter = document.getElementById('region').value;
-  const categoryFilter = document.getElementById('category').value;
-  const minSubs = document.getElementById('minSubs').value;
-  const maxSubs = document.getElementById('maxSubs').value;
-  
-  // Check if at least one filter is selected to allow searches without text input
-  if (!query && !countryFilter && !categoryFilter && !minSubs && !maxSubs) {
-    alert("Please select at least one filter or enter a search term.");
-    return;
-  }
+    const query = document.getElementById('query').value.trim();
+    const countryFilter = document.getElementById('region').value;
+    const categoryFilter = document.getElementById('category').value; // Selected category ID
+    const minSubs = document.getElementById('minSubs').value;
+    const maxSubs = document.getElementById('maxSubs').value;
 
-  // Build search URL (allowing empty query)
-  let searchUrl = `${SEARCH_BASE_URL}?part=snippet&type=channel&key=${API_KEY}&maxResults=25`;
-  
-  if (query) {
-    searchUrl += `&q=${encodeURIComponent(query)}`;
-  }
-
-  try {
-    const searchResponse = await fetch(searchUrl);
-    const searchData = await searchResponse.json();
-    
-    if (!searchResponse.ok) {
-      console.error("Error fetching channels:", searchData.error.message);
-      return;
-    }
-    
-    const channelIds = searchData.items.map(item => item.snippet.channelId).filter(id => id).join(',');
-
-    if (!channelIds) {
-      document.getElementById("results").innerHTML = "<p>No channels found. Try a different filter.</p>";
-      return;
-    }
-    
-    let channelsUrl = `${CHANNELS_BASE_URL}?part=snippet,statistics,contentDetails,brandingSettings&id=${channelIds}&key=${API_KEY}`;
-    const channelsResponse = await fetch(channelsUrl);
-    const channelsDataJson = await channelsResponse.json();
-    
-    if (!channelsResponse.ok) {
-      console.error("Error fetching channel details:", channelsDataJson.error.message);
-      return;
-    }
-    
-    let filteredChannels = channelsDataJson.items;
-
-    // Filter by country
-    if (countryFilter) {
-      filteredChannels = filteredChannels.filter(channel =>
-        channel.snippet.country && channel.snippet.country.toUpperCase() === countryFilter.toUpperCase()
-      );
+    // Ensure at least one filter is selected
+    if (!query && !countryFilter && !categoryFilter && !minSubs && !maxSubs) {
+        alert("Please select at least one filter or enter a search term.");
+        return;
     }
 
-    // Filter by category
-    if (categoryFilter) {
-      filteredChannels = filteredChannels.filter(channel =>
-        channel.snippet.categoryId && channel.snippet.categoryId === categoryFilter
-      );
+    let channelIds = [];
+
+    // ✅ 1️⃣ If Category is selected (and no query), search for videos to extract channel IDs
+    if (!query && categoryFilter) {
+        let videoSearchUrl = `${SEARCH_BASE_URL}?part=snippet&type=video&videoCategoryId=${categoryFilter}&key=${API_KEY}&maxResults=25`;
+
+        try {
+            const videoResponse = await fetch(videoSearchUrl);
+            const videoData = await videoResponse.json();
+
+            if (!videoResponse.ok || !videoData.items) {
+                console.error("Error fetching videos:", videoData.error?.message);
+                return;
+            }
+
+            // Extract unique channel IDs from videos
+            channelIds = [...new Set(videoData.items.map(video => video.snippet.channelId))];
+        } catch (error) {
+            console.error("Network error:", error);
+            return;
+        }
     }
 
-    // Filter by subscriber count
-    if (minSubs) {
-      const minValue = parseInt(minSubs.replace(/,/g, ''), 10);
-      filteredChannels = filteredChannels.filter(channel => {
-        const subs = parseInt(channel.statistics?.subscriberCount || 0, 10);
-        return subs >= minValue;
-      });
-    }
-    if (maxSubs) {
-      const maxValue = parseInt(maxSubs.replace(/,/g, ''), 10);
-      filteredChannels = filteredChannels.filter(channel => {
-        const subs = parseInt(channel.statistics?.subscriberCount || 0, 10);
-        return subs <= maxValue;
-      });
+    // ✅ 2️⃣ If a keyword is present, use the normal search API to find channels
+    if (query) {
+        let searchUrl = `${SEARCH_BASE_URL}?part=snippet&type=channel&q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=25`;
+
+        try {
+            const searchResponse = await fetch(searchUrl);
+            const searchData = await searchResponse.json();
+
+            if (!searchResponse.ok || !searchData.items) {
+                console.error("Error fetching channels:", searchData.error?.message);
+                return;
+            }
+
+            // Merge channel IDs (avoid duplicates)
+            const queryChannelIds = searchData.items.map(item => item.snippet.channelId).filter(id => id);
+            channelIds = [...new Set([...channelIds, ...queryChannelIds])];
+        } catch (error) {
+            console.error("Network error:", error);
+            return;
+        }
     }
 
-    channelsData = filteredChannels;
-    displayResults(channelsData);
+    // ✅ 3️⃣ If no channels were found, show a message
+    if (channelIds.length === 0) {
+        document.getElementById("results").innerHTML = "<p>No channels found. Try a different filter.</p>";
+        return;
+    }
 
-  } catch (error) {
-    console.error("Network error:", error);
-  }
+    // ✅ 4️⃣ Fetch Channel Details
+    try {
+        let channelsUrl = `${CHANNELS_BASE_URL}?part=snippet,statistics,contentDetails,brandingSettings&id=${channelIds.join(",")}&key=${API_KEY}`;
+        const channelsResponse = await fetch(channelsUrl);
+        const channelsDataJson = await channelsResponse.json();
+
+        if (!channelsResponse.ok) {
+            console.error("Error fetching channel details:", channelsDataJson.error.message);
+            return;
+        }
+
+        let filteredChannels = channelsDataJson.items;
+
+        // ✅ 5️⃣ Apply Additional Filters (Country, Subscribers)
+        if (countryFilter) {
+            filteredChannels = filteredChannels.filter(channel =>
+                channel.snippet.country && channel.snippet.country.toUpperCase() === countryFilter.toUpperCase()
+            );
+        }
+
+        if (minSubs) {
+            const minValue = parseInt(minSubs.replace(/,/g, ''), 10);
+            filteredChannels = filteredChannels.filter(channel => {
+                const subs = parseInt(channel.statistics?.subscriberCount || 0, 10);
+                return subs >= minValue;
+            });
+        }
+        if (maxSubs) {
+            const maxValue = parseInt(maxSubs.replace(/,/g, ''), 10);
+            filteredChannels = filteredChannels.filter(channel => {
+                const subs = parseInt(channel.statistics?.subscriberCount || 0, 10);
+                return subs <= maxValue;
+            });
+        }
+
+        channelsData = filteredChannels;
+        displayResults(channelsData);
+    } catch (error) {
+        console.error("Network error:", error);
+    }
 }
 
 // Function to display search results in a table
