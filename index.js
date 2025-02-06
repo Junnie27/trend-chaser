@@ -196,8 +196,8 @@ function sortResults(field) {
   sortOrder[field] = sortOrder[field] === "asc" ? "desc" : "asc";
 
   channelsData.sort((a, b) => {
-    let valueA = a[field] || 0;
-    let valueB = b[field] || 0;
+    let valueA = parseInt(a[field].toString().replace(/,/g, ""), 10) || 0;
+    let valueB = parseInt(b[field].toString().replace(/,/g, ""), 10) || 0;
 
     return sortOrder[field] === "asc" ? valueA - valueB : valueB - valueA;
   });
@@ -224,7 +224,7 @@ function displayResults(channels) {
       <tbody>
         ${channels.map(channel => `
           <tr>
-            <td>${channel.snippet.title}</td>
+            <td><a href="https://www.youtube.com/channel/${channel.id}" target="_blank">${channel.snippet.title}</a></td>
             <td>${parseInt(channel.statistics.subscriberCount, 10).toLocaleString()}</td>
             <td>${parseInt(channel.statistics.viewCount, 10).toLocaleString()}</td>
             <td>${parseInt(channel.statistics.videoCount, 10).toLocaleString()}</td>
