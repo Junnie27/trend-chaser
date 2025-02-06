@@ -216,11 +216,23 @@ function sortResults(field) {
 
       // ✅ Number Sorting (Subscribers, Views, Videos, Last 12 Months)
       case "subs":
+        valueA = parseInt(a.statistics?.subscriberCount?.toString().replace(/,/g, ""), 10) || 0;
+        valueB = parseInt(b.statistics?.subscriberCount?.toString().replace(/,/g, ""), 10) || 0;
+        break;
+
       case "views":
+        valueA = parseInt(a.statistics?.viewCount?.toString().replace(/,/g, ""), 10) || 0;
+        valueB = parseInt(b.statistics?.viewCount?.toString().replace(/,/g, ""), 10) || 0;
+        break;
+
       case "videos":
+        valueA = parseInt(a.statistics?.videoCount?.toString().replace(/,/g, ""), 10) || 0;
+        valueB = parseInt(b.statistics?.videoCount?.toString().replace(/,/g, ""), 10) || 0;
+        break;
+
       case "last12":
-        valueA = parseInt(a.statistics?.[field] || "0", 10);
-        valueB = parseInt(b.statistics?.[field] || "0", 10);
+        valueA = parseInt(a.videosLast12Months?.toString().replace(/,/g, ""), 10) || 0;
+        valueB = parseInt(b.videosLast12Months?.toString().replace(/,/g, ""), 10) || 0;
         break;
 
       // ✅ Memberships Sorting (Yes/No as Boolean)
@@ -232,6 +244,13 @@ function sortResults(field) {
       default:
         return 0;
     }
+
+    // Final sorting logic for numeric fields
+    return sortOrder[field] === "asc" ? valueA - valueB : valueB - valueA;
+  });
+
+  displayResults(channelsData);
+}
 
     // Final sorting logic for numeric fields
     return sortOrder[field] === "asc" ? valueA - valueB : valueB - valueA;
