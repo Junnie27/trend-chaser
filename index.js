@@ -54,7 +54,7 @@ async function searchChannels() {
   let channelIds = new Set();
   let queryChannelIds = new Set();
 
-  // ✅ Search for videos in the selected category
+  // ✅ If Category is selected, search for videos in that category
   if (categoryFilter) {
     let videoSearchUrl = `${SEARCH_BASE_URL}?part=snippet&type=video&videoCategoryId=${categoryFilter}&key=${API_KEY}&maxResults=50`;
 
@@ -74,7 +74,7 @@ async function searchChannels() {
     }
   }
 
-  // ✅ Search for channels matching the keyword
+  // ✅ If a keyword is present, search for channels with that keyword
   if (query) {
     let searchUrl = `${SEARCH_BASE_URL}?part=snippet&type=channel&q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=50`;
 
@@ -140,7 +140,6 @@ async function searchChannels() {
       });
     }
 
-    // ✅ Fetch video count for the last 12 months
     channelsData = await Promise.all(filteredChannels.map(async channel => {
       channel.videosLast12Months = await getVideosLast12Months(channel);
       return channel;
@@ -152,7 +151,7 @@ async function searchChannels() {
   }
 }
 
-// ✅ Fetch videos uploaded in the last 12 months
+// ✅ Function to fetch videos uploaded in the last 12 months
 async function getVideosLast12Months(channel) {
   let count = 0;
   if (!channel.contentDetails?.relatedPlaylists?.uploads) {
@@ -197,30 +196,44 @@ function sortResults(field) {
   sortOrder[field] = sortOrder[field] === "asc" ? "desc" : "asc";
 
   channelsData.sort((a, b) => {
-    let valueA, valueB;
-
-    switch (field) {
-      case "name":
-        valueA = a.snippet.title.toLowerCase();
-        valueB = b.snippet.title.toLowerCase();
-        return sortOrder[field] === "asc" ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
-      case "subs":
-      case "views":
-      case "videos":
-      case "last12":
-        valueA = parseInt(a.statistics?.[field] || a[field], 10) || 0;
-        valueB = parseInt(b.statistics?.[field] || b[field], 10) || 0;
-        break;
-      case "launch":
-        valueA = new Date(a.snippet.publishedAt);
-        valueB = new Date(b.snippet.publishedAt);
-        return sortOrder[field] === "asc" ? valueA - valueB : valueB - valueA;
-    }
+    let valueA = a[field] || 0;
+    let valueB = b[field] || 0;
 
     return sortOrder[field] === "asc" ? valueA - valueB : valueB - valueA;
   });
 
   displayResults(channelsData);
+}
+
+// ✅ Function to display search results in a table
+function displayResults(channels) {
+  const resultsContainer = document.getElementById("results");
+  resultsContainer.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortResults('name')">Channel Name</th>
+          <th onclick="sortResults('subs')">Subscribers</th>
+          <th onclick="sortResults('views')">Views</th>
+          <th onclick="sortResults('videos')">Video Count</th>
+          <th onclick="sortResults('launch')">Launch Date</th>
+          <th onclick="sortResults('last12')">Videos Last 12 Months</th>
+          <th onclick="sortResults('memberships')">Memberships Enabled</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${channels.map(channel => `
+          <tr>
+            <td>${channel.snippet.title}</td>
+            <td>${channel.statistics.subscriberCount}</td>
+            <td>${channel.statistics.viewCount}</td>
+            <td>${channel.statistics.videoCount}</td>
+            <td>${new Date(channel.snippet.publishedAt).toLocaleDateString()}</td>
+            <td>${channel.videosLast12Months}</td>
+            <td>${channel.brandingSettings?.channel?.membershipsEnabled ? "Yes" : "No"}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
 }
 
 // Expose functions globally
