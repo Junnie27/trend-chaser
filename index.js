@@ -193,21 +193,53 @@ async function getVideosLast12Months(channel) {
 function sortResults(field) {
   if (!channelsData || channelsData.length === 0) return;
 
+  // Toggle sorting order (ascending ⇄ descending)
   sortOrder[field] = sortOrder[field] === "asc" ? "desc" : "asc";
 
   channelsData.sort((a, b) => {
-    let valueA = a[field] || 0;
-    let valueB = b[field] || 0;
+    let valueA, valueB;
 
-    // Convert to numbers for proper sorting
-    if (typeof valueA === "string") valueA = parseInt(valueA.replace(/,/g, ""), 10) || 0;
-    if (typeof valueB === "string") valueB = parseInt(valueB.replace(/,/g, ""), 10) || 0;
+    switch (field) {
+      // ✅ Name Sorting (Alphabetical)
+      case "name":
+        valueA = a.snippet.title.toLowerCase();
+        valueB = b.snippet.title.toLowerCase();
+        return sortOrder[field] === "asc"
+          ? valueA.localeCompare(valueB)
+          : valueB.localeCompare(valueA);
 
+      // ✅ Date Sorting (Convert String to Date)
+      case "launch":
+        valueA = new Date(a.snippet.publishedAt);
+        valueB = new Date(b.snippet.publishedAt);
+        return sortOrder[field] === "asc" ? valueA - valueB : valueB - valueA;
+
+      // ✅ Number Sorting (Subscribers, Views, Videos, Last 12 Months)
+      case "subs":
+      case "views":
+      case "videos":
+      case "last12":
+        valueA = parseInt(a.statistics?.[field] || "0", 10);
+        valueB = parseInt(b.statistics?.[field] || "0", 10);
+        break;
+
+      // ✅ Memberships Sorting (Yes/No as Boolean)
+      case "memberships":
+        valueA = a.brandingSettings?.channel?.membershipsEnabled ? 1 : 0;
+        valueB = b.brandingSettings?.channel?.membershipsEnabled ? 1 : 0;
+        break;
+
+      default:
+        return 0;
+    }
+
+    // Final sorting logic for numeric fields
     return sortOrder[field] === "asc" ? valueA - valueB : valueB - valueA;
   });
 
   displayResults(channelsData);
 }
+
 
 // ✅ Function to display search results in a table
 function displayResults(channels) {
