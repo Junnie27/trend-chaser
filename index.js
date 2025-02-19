@@ -133,8 +133,10 @@ async function searchChannels() {
 
     // ✅ 5️⃣ Fetch video count for the last 12 months
     channelsData = await Promise.all(filteredChannels.map(async channel => {
-      channel.videosLast12Months = await getVideosLast12Months(channel);
-      return channel;
+      let { count, videoIds } = await getVideosLast12Months(channel);
+      channel.videosLast12Months = count;
+      channel.averageVideoDuration = await getAverageVideoDuration(videoIds);
+    return channel;
     }));
 
     displayResults(channelsData);
@@ -146,8 +148,10 @@ async function searchChannels() {
 // ✅ Function to fetch videos uploaded in the last 12 months
 async function getVideosLast12Months(channel) {
   let count = 0;
+  let videoIds = [];
+  
   if (!channel.contentDetails?.relatedPlaylists?.uploads) {
-    return count;
+    return { count, videoIds };
   }
 
   const playlistId = channel.contentDetails.relatedPlaylists.uploads;
@@ -156,7 +160,7 @@ async function getVideosLast12Months(channel) {
   cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
 
   do {
-    let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=50&key=${API_KEY}`;
+    let url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=20&key=${API_KEY}`;
     if (nextPageToken) url += `&pageToken=${nextPageToken}`;
 
     try {
@@ -168,6 +172,7 @@ async function getVideosLast12Months(channel) {
         const publishedAt = new Date(item.snippet.publishedAt);
         if (publishedAt >= cutoffDate) {
           count++;
+          videoIds.push(item.snippet.resourceId.videoId);
         }
       });
 
@@ -178,7 +183,72 @@ async function getVideosLast12Months(channel) {
     }
   } while (nextPageToken);
 
-  return count;
+  return { count, videoIds };
+}
+
+// ✅ Function to Fetch Video Durations
+async function getAverageVideoDuration(videoIds) {
+  if (videoIds.length === 0) return "N/A"; // No videos found
+
+  let totalDuration = 0;
+  let count = 0;
+  let nextBatch = 0;
+
+  while (nextBatch < videoIds.length) {
+    const batchIds = videoIds.slice(nextBatch, nextBatch + 50).join(",");
+    nextBatch += 50;
+
+    let url = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${batchIds}&key=${API_KEY}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (!response.ok || !data.items) break;
+
+      data.items.forEach(video => {
+        const duration = video.contentDetails.duration;
+        const seconds = parseISO8601Duration(duration);
+        totalDuration += seconds;
+        count++;
+      });
+    } catch (error) {
+      console.error("Error fetching video durations:", error);
+      break;
+    }
+  }
+
+  return count > 0 ? formatDuration(totalDuration / count) : "N/A"; // Average in HH:MM:SS
+}
+
+// ✅ Function to Convert YouTube's ISO 8601 Format (PT4M20S) to Seconds
+function parseISO8601Duration(duration) {
+  let match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+  let hours = match[1] ? parseInt(match[1]) : 0;
+  let minutes = match[2] ? parseInt(match[2]) : 0;
+  let seconds = match[3] ? parseInt(match[3]) : 0;
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
+// ✅ Since the average video duration is in HH:MM:SS format, we need to convert it into seconds before sorting.
+function durationToSeconds(duration) {
+  if (!duration || duration === "N/A") return 0; // Handle missing values
+  let parts = duration.split(":").map(Number);
+  
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2]; // HH:MM:SS
+  } else if (parts.length === 2) {
+    return parts[0] * 60 + parts[1]; // MM:SS
+  } else {
+    return parts[0]; // SS (unlikely)
+  }
+}
+
+// Convert seconds to HH:MM:SS format
+function formatDuration(seconds) {
+  let hours = Math.floor(seconds / 3600);
+  let minutes = Math.floor((seconds % 3600) / 60);
+  let secs = Math.floor(seconds % 60);
+  return `${hours > 0 ? hours + ":" : ""}${minutes}:${secs < 10 ? "0" : ""}${secs}`;
 }
 
 // ✅ Sorting function for table headers
@@ -227,6 +297,12 @@ function sortResults(field) {
         valueB = parseInt(b.videosLast12Months?.toString().replace(/,/g, ""), 10) || 0;
         break;
 
+      // ✅ Sorting Average Video Duration
+      case "avgDuration":
+        valueA = durationToSeconds(a.averageVideoDuration);
+        valueB = durationToSeconds(b.averageVideoDuration);
+        break;
+
       // ✅ Memberships Sorting (Yes/No as Boolean)
       case "memberships":
         valueA = a.brandingSettings?.channel?.membershipsEnabled ? 1 : 0;
@@ -237,7 +313,6 @@ function sortResults(field) {
         return 0;
     }
 
-    // Final sorting logic for numeric fields
     return sortOrder[field] === "asc" ? valueA - valueB : valueB - valueA;
   });
 
@@ -258,6 +333,7 @@ function displayResults(channels) {
           <th onclick="sortResults('videos')">Video Count</th>
           <th onclick="sortResults('launch')">Launch Date</th>
           <th onclick="sortResults('last12')">Videos Last 12 Months</th>
+          <th onclick="sortResults('avgDuration')">Avg Video Duration</th>
           <th onclick="sortResults('memberships')">Memberships Enabled</th>
         </tr>
       </thead>
@@ -270,6 +346,7 @@ function displayResults(channels) {
             <td>${parseInt(channel.statistics.videoCount, 10).toLocaleString()}</td>
             <td>${new Date(channel.snippet.publishedAt).toLocaleDateString()}</td>
             <td>${Number(channel.videosLast12Months).toLocaleString()}</td>
+            <td>${channel.averageVideoDuration}</td>
             <td>${channel.brandingSettings?.channel?.membershipsEnabled ? "Yes" : "No"}</td>
           </tr>`).join('')}
       </tbody>
