@@ -52,60 +52,51 @@ async function searchChannels() {
   }
 
   let channelIds = new Set();
-  let queryChannelIds = new Set();
 
-  // ✅ If Category is selected, search for videos in that category
-  if (categoryFilter) {
-    let videoSearchUrl = `${SEARCH_BASE_URL}?part=snippet&type=video&videoCategoryId=${categoryFilter}&key=${API_KEY}&maxResults=50`;
+  // ✅ 1️⃣ If searching by video tags (search for videos first)
+  let videoSearchUrl = `${SEARCH_BASE_URL}?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=50`;
 
-    try {
-      const videoResponse = await fetch(videoSearchUrl);
-      const videoData = await videoResponse.json();
+  try {
+    const videoResponse = await fetch(videoSearchUrl);
+    const videoData = await videoResponse.json();
 
-      if (!videoResponse.ok || !videoData.items) {
-        console.error("Error fetching videos:", videoData.error?.message);
-        return;
-      }
-
-      videoData.items.forEach(video => channelIds.add(video.snippet.channelId));
-    } catch (error) {
-      console.error("Network error:", error);
+    if (!videoResponse.ok || !videoData.items) {
+      console.error("Error fetching videos:", videoData.error?.message);
       return;
     }
-  }
 
-  // ✅ If a keyword is present, search for channels with that keyword
-  if (query) {
-    let searchUrl = `${SEARCH_BASE_URL}?part=snippet&type=channel&q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=50`;
-
-    try {
-      const searchResponse = await fetch(searchUrl);
-      const searchData = await searchResponse.json();
-
-      if (!searchResponse.ok || !searchData.items) {
-        console.error("Error fetching channels:", searchData.error?.message);
-        return;
-      }
-
-      searchData.items.forEach(item => queryChannelIds.add(item.snippet.channelId));
-    } catch (error) {
-      console.error("Network error:", error);
-      return;
-    }
-  }
-
-  // ✅ Apply AND condition (Only return channels that match BOTH category & keyword)
-  if (query && categoryFilter) {
-    channelIds = new Set([...channelIds].filter(id => queryChannelIds.has(id)));
-  } else {
-    channelIds = new Set([...channelIds, ...queryChannelIds]); // Use both sets if one is missing
-  }
-
-  if (channelIds.size === 0) {
-    document.getElementById("results").innerHTML = "<p>No channels found. Try a different filter.</p>";
+    videoData.items.forEach(video => channelIds.add(video.snippet.channelId));
+  } catch (error) {
+    console.error("Network error:", error);
     return;
   }
 
+  // ✅ 2️⃣ If category is selected, search for videos in that category too
+  if (categoryFilter) {
+    let categorySearchUrl = `${SEARCH_BASE_URL}?part=snippet&type=video&videoCategoryId=${categoryFilter}&key=${API_KEY}&maxResults=50`;
+
+    try {
+      const categoryResponse = await fetch(categorySearchUrl);
+      const categoryData = await categoryResponse.json();
+
+      if (!categoryResponse.ok || !categoryData.items) {
+        console.error("Error fetching category videos:", categoryData.error?.message);
+        return;
+      }
+
+      categoryData.items.forEach(video => channelIds.add(video.snippet.channelId));
+    } catch (error) {
+      console.error("Network error:", error);
+      return;
+    }
+  }
+
+  if (channelIds.size === 0) {
+    document.getElementById("results").innerHTML = "<p>No channels found based on video topics.</p>";
+    return;
+  }
+
+  // ✅ 3️⃣ Fetch channel details from extracted channel IDs
   try {
     let channelsUrl = `${CHANNELS_BASE_URL}?part=snippet,statistics,contentDetails,brandingSettings&id=${[...channelIds].join(",")}&key=${API_KEY}`;
     const channelsResponse = await fetch(channelsUrl);
@@ -118,7 +109,7 @@ async function searchChannels() {
 
     let filteredChannels = channelsDataJson.items;
 
-    // ✅ Apply Additional Filters (Country, Subscribers)
+    // ✅ 4️⃣ Apply Additional Filters (Country, Subscribers)
     if (countryFilter) {
       filteredChannels = filteredChannels.filter(channel =>
         channel.snippet.country && channel.snippet.country.toUpperCase() === countryFilter.toUpperCase()
@@ -140,6 +131,7 @@ async function searchChannels() {
       });
     }
 
+    // ✅ 5️⃣ Fetch video count for the last 12 months
     channelsData = await Promise.all(filteredChannels.map(async channel => {
       channel.videosLast12Months = await getVideosLast12Months(channel);
       return channel;
