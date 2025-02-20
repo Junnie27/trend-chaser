@@ -90,15 +90,17 @@
 
     .tea-fill {
       position: absolute;
-      bottom: 22%; /* Adjusted to fit inside the cup */
-      left: 23%;
-      width: 54%;
+      bottom: 15%;  /* Adjusted to align with cup bottom */
+      left: 50%;     /* Center the tea */
+      transform: translateX(-50%); /* Shift it back to center */
+      width: 60%;    /* Adjust width to match cup size */
       height: 0%;
       background: linear-gradient(to top, #c27c50, #8B4513);
       transition: height 3s linear;
-      border-radius: 50%;
+      border-radius: 0 0 50px 50px; /* Smooth bottom curve */
       z-index: 0;
     }
+
 
     /* Steaming Effect */
     .steam {
@@ -192,9 +194,11 @@
       // Simulate a search process
       setTimeout(() => {
         clearInterval(fillTea);
-        tea.style.height = "80%"; // Ensure full tea
-        setTimeout(() => {
-          loadingIndicator.style.display = "none";
+        tea.style.height = "75%"; // Ensure full tea
+          setTimeout(() => {
+            if (channelsData.length > 0) {
+            loadingIndicator.style.display = "none"; // Only hide when results are ready
+          }
         }, 500);
       }, 3000); // Simulating search completion after 3s
     }
