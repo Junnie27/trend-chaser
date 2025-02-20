@@ -45,71 +45,67 @@ async function searchChannels() {
   const categoryFilter = document.getElementById('category').value;
   const minSubs = document.getElementById('minSubs').value;
   const maxSubs = document.getElementById('maxSubs').value;
+  const loadingIndicator = document.getElementById("loading");
+  const resultsContainer = document.getElementById("results");
 
   if (!query && !countryFilter && !categoryFilter && !minSubs && !maxSubs) {
     alert("Please select at least one filter or enter a search term.");
     return;
   }
 
-  let channelIds = new Set();
-
-  // ✅ 1️⃣ If searching by video tags (search for videos first)
-  let videoSearchUrl = `${SEARCH_BASE_URL}?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=50`;
+  // ✅ Show loading indicator & clear previous results
+  loadingIndicator.style.display = "block";
+  resultsContainer.innerHTML = "";
 
   try {
+    let channelIds = new Set();
+
+    // ✅ Step 1: Search for Videos (by tags)
+    let videoSearchUrl = `${SEARCH_BASE_URL}?part=snippet&type=video&q=${encodeURIComponent(query)}&key=${API_KEY}&maxResults=50`;
     const videoResponse = await fetch(videoSearchUrl);
     const videoData = await videoResponse.json();
 
     if (!videoResponse.ok || !videoData.items) {
       console.error("Error fetching videos:", videoData.error?.message);
+      loadingIndicator.style.display = "none"; // ✅ Hide loading on error
       return;
     }
-
     videoData.items.forEach(video => channelIds.add(video.snippet.channelId));
-  } catch (error) {
-    console.error("Network error:", error);
-    return;
-  }
 
-  // ✅ 2️⃣ If category is selected, search for videos in that category too
-  if (categoryFilter) {
-    let categorySearchUrl = `${SEARCH_BASE_URL}?part=snippet&type=video&videoCategoryId=${categoryFilter}&key=${API_KEY}&maxResults=50`;
-
-    try {
+    // ✅ Step 2: If category is selected, search for category videos
+    if (categoryFilter) {
+      let categorySearchUrl = `${SEARCH_BASE_URL}?part=snippet&type=video&videoCategoryId=${categoryFilter}&key=${API_KEY}&maxResults=50`;
       const categoryResponse = await fetch(categorySearchUrl);
       const categoryData = await categoryResponse.json();
 
       if (!categoryResponse.ok || !categoryData.items) {
         console.error("Error fetching category videos:", categoryData.error?.message);
+        loadingIndicator.style.display = "none"; // ✅ Hide loading on error
         return;
       }
-
       categoryData.items.forEach(video => channelIds.add(video.snippet.channelId));
-    } catch (error) {
-      console.error("Network error:", error);
+    }
+
+    if (channelIds.size === 0) {
+      resultsContainer.innerHTML = "<p>No channels found based on video topics.</p>";
+      loadingIndicator.style.display = "none"; // ✅ Hide loading if no results
       return;
     }
-  }
 
-  if (channelIds.size === 0) {
-    document.getElementById("results").innerHTML = "<p>No channels found based on video topics.</p>";
-    return;
-  }
-
-  // ✅ 3️⃣ Fetch channel details from extracted channel IDs
-  try {
+    // ✅ Step 3: Fetch channel details from extracted channel IDs
     let channelsUrl = `${CHANNELS_BASE_URL}?part=snippet,statistics,contentDetails,brandingSettings&id=${[...channelIds].join(",")}&key=${API_KEY}`;
     const channelsResponse = await fetch(channelsUrl);
     const channelsDataJson = await channelsResponse.json();
 
     if (!channelsResponse.ok) {
       console.error("Error fetching channel details:", channelsDataJson.error.message);
+      loadingIndicator.style.display = "none"; // ✅ Hide loading on error
       return;
     }
 
     let filteredChannels = channelsDataJson.items;
 
-    // ✅ 4️⃣ Apply Additional Filters (Country, Subscribers)
+    // ✅ Step 4: Apply Filters (Country, Subscribers)
     if (countryFilter) {
       filteredChannels = filteredChannels.filter(channel =>
         channel.snippet.country && channel.snippet.country.toUpperCase() === countryFilter.toUpperCase()
@@ -131,17 +127,20 @@ async function searchChannels() {
       });
     }
 
-    // ✅ 5️⃣ Fetch video count for the last 12 months
+    // ✅ Step 5: Fetch video duration and process data
     channelsData = await Promise.all(filteredChannels.map(async channel => {
       let { count, videoIds } = await getVideosLast12Months(channel);
       channel.videosLast12Months = count;
       channel.averageVideoDuration = await getAverageVideoDuration(videoIds);
-    return channel;
+      return channel;
     }));
 
+    // ✅ Hide loading indicator & show results
+    loadingIndicator.style.display = "none";
     displayResults(channelsData);
   } catch (error) {
     console.error("Network error:", error);
+    loadingIndicator.style.display = "none"; // ✅ Hide loading if an error occurs
   }
 }
 
