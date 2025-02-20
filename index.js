@@ -67,13 +67,14 @@ async function searchChannels() {
   }, 300); // Fills gradually every 300ms
 
   // Hide the loading only when search results are ready
-  searchFunction().then(() => {
+  setTimeout(() => {
     clearInterval(fillTea);
     tea.style.height = "100%"; // Ensure full tea when done
     setTimeout(() => {
-      loadingIndicator.style.display = "none";
-  }, 500);
-  });
+        loadingIndicator.style.display = "none";
+    }, 500);
+  }, 3000); // Simulate search completion
+
 
   resultsContainer.innerHTML = "";
 
