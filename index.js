@@ -55,6 +55,11 @@ async function searchChannels() {
 
   // ✅ Show loading indicator & clear previous results
   loadingIndicator.style.display = "block";
+  tea.style.height = "0%"; // Reset tea level
+    setTimeout(() => {
+    tea.style.height = "100%"; // Fill the tea cup
+  }, 500); // Start filling animation after 0.5 seconds
+
   resultsContainer.innerHTML = "";
 
   try {
