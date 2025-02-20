@@ -208,8 +208,12 @@ async function getAverageVideoDuration(videoIds) {
       data.items.forEach(video => {
         const duration = video.contentDetails.duration;
         const seconds = parseISO8601Duration(duration);
-        totalDuration += seconds;
-        count++;
+
+        // ✅ Exclude videos that are 180 seconds (3 minutes) or less
+        if (seconds > 180) {
+          totalDuration += seconds;
+          count++;
+        }
       });
     } catch (error) {
       console.error("Error fetching video durations:", error);
@@ -219,6 +223,7 @@ async function getAverageVideoDuration(videoIds) {
 
   return count > 0 ? formatDuration(totalDuration / count) : "N/A"; // Average in HH:MM:SS
 }
+
 
 // ✅ Function to Convert YouTube's ISO 8601 Format (PT4M20S) to Seconds
 function parseISO8601Duration(duration) {
