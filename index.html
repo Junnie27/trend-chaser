@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trend Chaser - YouTube Channel Search</title>
+  <title>Trend Chaser - English Tea Animation</title>
   <style>
     /* Basic styling */
     body {
@@ -11,7 +11,7 @@
       text-align: center;
       margin: 20px;
     }
-    
+
     #search-container {
       margin-top: 20px;
       display: flex;
@@ -64,7 +64,7 @@
       color: #0073e6;
     }
 
-    /* Tea Brewing Animation */
+    /* Tea Cup Animation */
     #loading {
       display: none; /* Initially hidden */
       font-size: 18px;
@@ -75,36 +75,46 @@
     }
 
     .tea-container {
-      width: 120px;
-      height: 100px;
-      border: 5px solid #8B4513;
-      border-radius: 60px 60px 10px 10px; /* More rounded cup shape */
-      margin: 20px auto;
       position: relative;
-      background-color: white;
-      overflow: hidden;
-      display: flex;
-      align-items: flex-end; /* Align tea to bottom */
-      justify-content: center;
+      display: inline-block;
+      width: 150px; /* Adjust based on your image */
+      height: 150px;
     }
 
-    .tea {
-      width: 90%; /* Slightly smaller width to look natural */
-      height: 0%;
-      background-color: #D2691E;
-      transition: height 3s linear;
-      border-radius: 0 0 40px 40px; /* Rounded bottom for a cup look */
-    }
-
-    .handle {
+    .tea-cup {
+      width: 100%;
+      height: 100%;
       position: absolute;
-      right: -20px;
-      top: 20px;
-      width: 35px;
-      height: 50px;
-      border: 5px solid #8B4513;
+      z-index: 1;
+    }
+
+    .tea-fill {
+      position: absolute;
+      bottom: 15%; /* Align tea fill properly */
+      left: 20%;
+      width: 60%;
+      height: 0%;
+      background: linear-gradient(to top, #c27c50, #8B4513);
+      transition: height 3s linear;
       border-radius: 50%;
-      background-color: white;
+      z-index: 0;
+    }
+
+    /* Steaming Effect */
+    .steam {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 30px;
+      opacity: 0;
+      animation: steamAnimation 2s infinite ease-in-out;
+    }
+
+    @keyframes steamAnimation {
+      0% { opacity: 0; transform: translateX(-50%) translateY(5px); }
+      50% { opacity: 1; transform: translateX(-50%) translateY(-10px); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-15px); }
     }
 
   </style>
@@ -145,8 +155,9 @@
   <div id="loading">
     <p>🍵 Hold tight, your tea is brewing...</p>
     <div class="tea-container">
-      <div class="tea" id="tea"></div>
-      <div class="handle"></div>
+      <img src="/mnt/data/image.png" class="tea-cup" alt="Tea Cup" />
+      <div class="tea-fill" id="tea"></div>
+      <div class="steam">☁️</div>
     </div>
   </div>
 
@@ -160,6 +171,32 @@
       if (value && !isNaN(value)) {
         input.value = parseInt(value, 10).toLocaleString();
       }
+    }
+
+    function searchChannels() {
+      let loadingIndicator = document.getElementById("loading");
+      let tea = document.getElementById("tea");
+
+      loadingIndicator.style.display = "block"; // Show loading
+      tea.style.height = "0%"; // Reset tea level
+
+      let fillTea = setInterval(() => {
+        let currentHeight = parseInt(tea.style.height) || 0;
+        if (currentHeight < 80) { // Prevent overflow
+          tea.style.height = `${currentHeight + 10}%`; // Incrementally fill
+        } else {
+          clearInterval(fillTea);
+        }
+      }, 300);
+
+      // Simulate a search process
+      setTimeout(() => {
+        clearInterval(fillTea);
+        tea.style.height = "80%"; // Ensure full tea
+        setTimeout(() => {
+          loadingIndicator.style.display = "none";
+        }, 500);
+      }, 3000); // Simulating search completion after 3s
     }
   </script>
 
