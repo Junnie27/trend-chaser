@@ -56,26 +56,14 @@ async function searchChannels() {
   // ✅ Show loading indicator & clear previous results
 loadingIndicator.style.display = "block";
 
-let teaFill = document.querySelector('.tea-fill'); // ✅ Get the tea fill element
-teaFill.style.height = "0%"; // ✅ Reset tea level
+// ✅ Show tea cup when search starts
+document.querySelector('.tea-container').classList.remove('hidden');
 
-let fillTea = setInterval(() => {
-    let currentHeight = parseInt(teaFill.style.height) || 0;
-    if (currentHeight < 100) {
-        teaFill.style.height = `${currentHeight + 10}%`; // ✅ Incrementally fill
-    } else {
-        clearInterval(fillTea);
-    }
-}, 300); // ✅ Fills gradually every 300ms
-
-// ✅ Hide loading only when search results are ready
+// ✅ Simulate search process (Replace with actual API calls)
 setTimeout(() => {
-    clearInterval(fillTea);
-    teaFill.style.height = "100%"; // ✅ Ensure full tea when done
-    setTimeout(() => {
-        loadingIndicator.style.display = "none";
-    }, 500);
-}, 3000); // ✅ Simulate search completion
+    // ✅ Hide tea cup when results are ready
+    document.querySelector('.tea-container').classList.add('hidden');
+}, 3000); // Adjust timing as needed
 
   resultsContainer.innerHTML = "";
 
