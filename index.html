@@ -85,17 +85,24 @@
 .tea-fill {
   position: absolute;
   bottom: 0;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
-  height: 100%;
-  background: url('https://raw.githubusercontent.com/Junnie27/trend-chaser/main/Tea%20fill.png'); /* ✅ Replace this with your raw URL */
+  height: 0%; /* ✅ Starts empty */
+  background: url('https://raw.githubusercontent.com/Junnie27/trend-chaser/main/Tea%20fill.png'); /* ✅ Correct Raw URL */
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  filter: brightness(0) saturate(100%) invert(41%) sepia(37%) saturate(457%) hue-rotate(358deg) brightness(88%) contrast(91%) opacity(0.7); /* ✅ Transparent brown */
-  transition: opacity 3s ease-in-out;
+  filter: brightness(0) saturate(100%) invert(41%) sepia(37%) saturate(457%) hue-rotate(358deg) brightness(88%) contrast(91%) opacity(0.8); /* ✅ Keep color transparent brown */
+  transition: height 3s ease-in-out; /* ✅ Fills smoothly from bottom up */
   z-index: 2; /* ✅ Tea is in front of the cup */
 }
+
+/* ✅ When search starts, make tea rise */
+.tea-fill.show {
+  height: 100%; /* ✅ Tea rises fully to the top */
+}
+
 
 .tea-cup {
   display: block;
