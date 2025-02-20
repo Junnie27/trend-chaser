@@ -84,14 +84,14 @@
 
     .tea-fill {
       position: absolute;
-      bottom: 20%;  /* ✅ Tea starts above the saucer */
+      bottom: 18%;  /* ✅ Tea starts inside the cup correctly */
       left: 50%;
       transform: translateX(-50%);
-      width: 55%;  /* ✅ Width adjusted to fit inside the cup */
+      width: 58%;  /* ✅ Slightly wider to fit the cup */
       height: 0%;
       background: linear-gradient(to top, rgba(194, 124, 80, 0.7), rgba(139, 69, 19, 0.7)); /* ✅ Transparent brown */
       transition: height 3s linear;
-      border-radius: 0 0 40px 40px;  /* ✅ Matches cup's bottom curve */
+      border-radius: 20px 20px 0 0;  /* ✅ Softer top curve */
       z-index: 2;  /* ✅ Tea is in front of the cup */
     }
 
@@ -102,6 +102,7 @@
       position: relative;
       z-index: 1; /* ✅ Cup stays behind the tea */
     }
+
 
     /* Steaming Effect */
     .steam {
