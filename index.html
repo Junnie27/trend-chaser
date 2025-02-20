@@ -84,14 +84,14 @@
 
     .tea-fill {
       position: absolute;
-      bottom: 22%; /* Ensures tea starts at the bottom inside the cup */
+      bottom: 30%; /* ✅ Lower the tea slightly to avoid covering the tea bag */
       left: 50%;
       transform: translateX(-50%);
       width: 60%;
       height: 0%;
       background: linear-gradient(to top, #c27c50, #8B4513);
       transition: height 3s linear;
-      border-radius: 0 0 40px 40px; /* Rounded bottom */
+      border-radius: 50% 50% 0 0; /* ✅ Smooth curved top */
       z-index: 2; /* ✅ Ensures tea is in front of the cup */
     }
 
@@ -102,6 +102,7 @@
       position: relative;
       z-index: 1; /* ✅ Cup stays behind the tea */
     }
+
 
 
     /* Steaming Effect */
