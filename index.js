@@ -59,11 +59,24 @@ loadingIndicator.style.display = "block";
 // ✅ Show tea cup when search starts
 document.querySelector('.tea-container').classList.remove('hidden');
 
-// ✅ Simulate search process (Replace with actual API calls)
-setTimeout(() => {
-    // ✅ Hide tea cup when results are ready
-    document.querySelector('.tea-container').classList.add('hidden');
-}, 3000); // Adjust timing as needed
+async function searchChannels() {
+    const loadingIndicator = document.getElementById("loading");
+    loadingIndicator.style.display = "block"; // ✅ Show loading text
+
+    try {
+        // ✅ Your API call and processing logic
+        let results = await fetchYouTubeData(); // Replace with your actual API call function
+        displayResults(results); // ✅ Display the results when ready
+
+        // ✅ Hide the tea cup ONLY when results are fully loaded
+        document.querySelector('.tea-container').classList.add('hidden');
+        loadingIndicator.style.display = "none"; // ✅ Also hide the loading text
+    } catch (error) {
+        console.error("Error fetching results:", error);
+        loadingIndicator.style.display = "none"; // ✅ Hide loading text if there's an error
+    }
+}
+
 
   resultsContainer.innerHTML = "";
 
