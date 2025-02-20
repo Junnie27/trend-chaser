@@ -54,27 +54,28 @@ async function searchChannels() {
   }
 
   // ✅ Show loading indicator & clear previous results
-  loadingIndicator.style.display = "block";
-    tea.style.height = "0%"; // Reset tea level
+loadingIndicator.style.display = "block";
 
-  let fillTea = setInterval(() => {
-  let currentHeight = parseInt(tea.style.height) || 0;
+let teaFill = document.querySelector('.tea-fill'); // ✅ Get the tea fill element
+teaFill.style.height = "0%"; // ✅ Reset tea level
+
+let fillTea = setInterval(() => {
+    let currentHeight = parseInt(teaFill.style.height) || 0;
     if (currentHeight < 100) {
-      tea.style.height = `${currentHeight + 10}%`; // Incrementally fill
+        teaFill.style.height = `${currentHeight + 10}%`; // ✅ Incrementally fill
     } else {
-      clearInterval(fillTea);
+        clearInterval(fillTea);
     }
-  }, 300); // Fills gradually every 300ms
+}, 300); // ✅ Fills gradually every 300ms
 
-  // Hide the loading only when search results are ready
-  setTimeout(() => {
+// ✅ Hide loading only when search results are ready
+setTimeout(() => {
     clearInterval(fillTea);
-    tea.style.height = "100%"; // Ensure full tea when done
+    teaFill.style.height = "100%"; // ✅ Ensure full tea when done
     setTimeout(() => {
         loadingIndicator.style.display = "none";
     }, 500);
-  }, 3000); // Simulate search completion
-
+}, 3000); // ✅ Simulate search completion
 
   resultsContainer.innerHTML = "";
 
