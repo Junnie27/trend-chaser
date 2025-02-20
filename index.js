@@ -55,10 +55,25 @@ async function searchChannels() {
 
   // ✅ Show loading indicator & clear previous results
   loadingIndicator.style.display = "block";
-  tea.style.height = "0%"; // Reset tea level
+    tea.style.height = "0%"; // Reset tea level
+
+  let fillTea = setInterval(() => {
+  let currentHeight = parseInt(tea.style.height) || 0;
+    if (currentHeight < 100) {
+      tea.style.height = `${currentHeight + 10}%`; // Incrementally fill
+    } else {
+      clearInterval(fillTea);
+    }
+  }, 300); // Fills gradually every 300ms
+
+  // Hide the loading only when search results are ready
+  searchFunction().then(() => {
+    clearInterval(fillTea);
+    tea.style.height = "100%"; // Ensure full tea when done
     setTimeout(() => {
-    tea.style.height = "100%"; // Fill the tea cup
-  }, 500); // Start filling animation after 0.5 seconds
+      loadingIndicator.style.display = "none";
+  }, 500);
+  });
 
   resultsContainer.innerHTML = "";
 
